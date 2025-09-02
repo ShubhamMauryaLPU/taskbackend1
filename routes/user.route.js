@@ -1,5 +1,12 @@
-const {getById}=require("../controller/user.controller.js");
 const express = require("express");
 const router = express.Router();
-router.route("/login").post(getById);
+const {
+  createUser,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+} = require("../controller/user.controller.js");
+router.route("/").get(getAllUsers).post(createUser);
+router.route("/:id").get(getUserById).put(updateUser).delete(deleteUser);
 module.exports = router;

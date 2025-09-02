@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const taskRoute = require("./routes/tasks.route.js");
 const userRoute=require("./routes/user.route.js");
+const userAuth=require("./routes/auth.routes.js")
 const cors = require("cors");
 const app = express();
 app.use(
@@ -13,8 +14,13 @@ app.use(
   })
 );
 app.use(express.json());
+
+// routes
+app.use("/api/v1",userAuth);
 app.use("/api/v1/tasks", taskRoute);
 app.use("/api/v1/user",userRoute);
+
+
 app.get("/", (req, res) => {
   res.send("Your Backend is working");
 });
