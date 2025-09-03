@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+
+// Compliance (for IT/GST tasks)
 const complianceSchema = new mongoose.Schema(
   {
     auditReportDue: { type: Date },
@@ -7,6 +9,7 @@ const complianceSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// Task type details
 const taskTypeSchema = new mongoose.Schema(
   {
     name: { type: String, enum: ["Audited", "Not Audited"], required: true },
@@ -17,43 +20,71 @@ const taskTypeSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// Logs for tracking actions
 const logSchema = new mongoose.Schema(
   {
     action: {
       type: String,
       enum: ["Created", "Assigned", "Updated", "Filed", "Closed"],
+      required: true,
     },
-    by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    by: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     at: { type: Date, default: Date.now },
     remark: { type: String },
   },
   { _id: false }
 );
+
 const taskSchema = new mongoose.Schema(
   {
-    name: { type: String, enum: ["TDS", "IT", "GST"], required: true },
-    nature: { type: String, enum: ["Recurring", "One_Time"], required: true },
-    client: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Client",
+    // Type of task
+    name: {
+      type: String,
+      enum: ["TDS", "IT", "GST"],
       required: true,
     },
+
+    // Nature of task
+    nature: {
+      type: String,
+      enum: ["Recurring", "One_Time"],
+      required: true,
+    },
+
+    // Actual client (end user)
+    client: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // role = "user"
+      required: true,
+    },
+
+    // Assignment hierarchy
     assignedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "User", // usually admin or supervisor only two 
       required: true,
+    },
+    supervisor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // optional: supervisor in the chain
+      default: null,
     },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "User", // staff
       required: true,
     },
+
+    // Task status
     status: {
       type: String,
       enum: ["Pending", "Overdue", "Filed", "Closed"],
       default: "Pending",
     },
+
     isActive: { type: Boolean, default: true },
+
+    // Embedded schemas
     type: taskTypeSchema,
     compliance: complianceSchema,
     logs: [logSchema],
@@ -61,5 +92,4 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Task = mongoose.model("Task", taskSchema);
-module.exports = Task;
+module.exports = mongoose.model("Task", taskSchema);

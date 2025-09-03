@@ -1,11 +1,17 @@
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
-const taskRoute = require("./routes/tasks.route.js");
-const userRoute=require("./routes/user.route.js");
-const userAuth=require("./routes/auth.routes.js")
 const cors = require("cors");
+const methodOverride = require("method-override");
+
+// Routes
+const taskRoute = require("./routes/tasks.route.js");
+const userRoute = require("./routes/user.route.js");
+const userAuth = require("./routes/auth.routes.js");
+
 const app = express();
+
+// Middleware
 app.use(
   cors({
     origin: ["http://localhost:5173"],
@@ -13,21 +19,27 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride("_method"));
 
-// routes
-app.use("/api/v1",userAuth);
+// Routes
+app.use("/api/v1", userAuth);
 app.use("/api/v1/tasks", taskRoute);
-app.use("/api/v1/user",userRoute);
+app.use("/api/v1/user", userRoute);
 
-
+// Test route
 app.get("/", (req, res) => {
   res.send("Your Backend is working");
 });
+
+// Database connection
 const mongoUrl = process.env.MONGO_DB_URL;
 mongoose
   .connect(mongoUrl)
   .then(() => console.log("Database Connected"))
   .catch((err) => console.error(err));
 
-app.listen(8080, () => console.log("Server running on port 8080"));
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
