@@ -10,6 +10,7 @@ const userRoute = require("./routes/user.route.js");
 const userAuth = require("./routes/auth.routes.js");
 const userSampleSchema = require("./models/user.sample.schema.js");
 const incomeTaxRoute = require("./routes/incomeTax.routes.js");
+const gstRoute = require("./routes/gst.route.js");
 const app = express();
 
 // Middleware
@@ -30,6 +31,7 @@ app.use("/api/v1", userAuth);
 app.use("/api/v1/tasks", taskRoute);
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/tax", incomeTaxRoute);
+app.use("/api/v1/gst", gstRoute);
 // Test route
 app.get("/", (req, res) => {
   res.send("Your Backend is working");

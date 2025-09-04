@@ -1,6 +1,5 @@
 // controllers/user.controller.js
 const User = require("../models/user.sample.schema.js");
-
 // Helper: Add log to user
 const addLog = async (userId, action, performedBy, remark = "") => {
   await User.findByIdAndUpdate(userId, {
@@ -62,8 +61,12 @@ exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find({})
       .populate("supervisor", "name email role")
-      .populate("staff", "name email role");
-    res.json(users);
+      .populate("staff", "name email role")
+      .populate("gst")
+      .populate("incomeTax");
+    
+    const filteredUsers=users.filter((user)=>user.role!=="admin")
+    res.json(filteredUsers);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
