@@ -8,7 +8,6 @@ const complianceSchema = new mongoose.Schema(
   },
   { _id: false }
 );
-
 // Task type details
 const taskTypeSchema = new mongoose.Schema(
   {
@@ -43,7 +42,6 @@ const taskSchema = new mongoose.Schema(
       enum: ["TDS", "IT", "GST"],
       required: true,
     },
-
     // Nature of task
     nature: {
       type: String,

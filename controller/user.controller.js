@@ -1,115 +1,165 @@
-const User = require("../models/user.schema.js"); 
-const bcrypt = require("bcryptjs");
+// controllers/user.controller.js
+const User = require("../models/user.sample.schema.js");
 
-const createUser = async (req, res) => {
+// Helper: Add log to user
+const addLog = async (userId, action, performedBy, remark = "") => {
+  await User.findByIdAndUpdate(userId, {
+    $push: {
+      logs: { action, performedBy, remark, timestamp: new Date() },
+    },
+  });
+};
+
+// Create a new user
+exports.createUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, phone, role, supervisor, createdBy } =
+      req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+    // Prevent multiple admins
+    if (role === "admin") {
+      const adminExists = await User.findOne({ role: "admin" });
+      if (adminExists) {
+        return res.status(400).json({ message: "Admin already exists" });
+      }
     }
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({
       name,
       email,
-      password: hashedPassword,
+      password,
+      phone,
       role,
+      supervisor,
+      createdBy,
     });
 
-    await newUser.save();
-    const userToSend = await User.findById(newUser._id).select("-password").populate("tasks");
+    const savedUser = await newUser.save();
 
-    res.status(201).json(userToSend);
-  } catch (err) {
-    res.status(500).json({ message: "Server Error", error: err.message });
-  }
-};
-
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find().select("-password").populate("tasks");
-    res.status(200).json(users);
-  } catch (err) {
-    res.status(500).json({ message: "Server Error", error: err.message });
-  }
-};
-const getUserById = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select("-password").populate("tasks");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    // Update hierarchy
+    if (role === "staff" && supervisor) {
+      await User.findByIdAndUpdate(supervisor, {
+        $push: { staff: savedUser._id },
+      });
     }
-    res.status(200).json(user);
-  } catch (err) {
-    res.status(500).json({ message: "Server Error", error: err.message });
-  }
-};
-const updateUser = async (req, res) => {
-  try {
-    const updates = { ...req.body };
-    if (updates.password) {
-      const salt = await bcrypt.genSalt(10);
-      updates.password = await bcrypt.hash(updates.password, salt);
+    if (role === "user" && supervisor) {
+      await User.findByIdAndUpdate(supervisor, {
+        $push: { users: savedUser._id },
+      });
     }
 
+    // Add log
+    await addLog(savedUser._id, "User Created", createdBy, `Role: ${role}`);
+
+    res.status(201).json(savedUser);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get all users
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({})
+      .populate("supervisor", "name email role")
+      .populate("staff", "name email role");
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+exports.getStaff = async (req, res) => {
+  try {
+    const staff = await User.find({ role: "staff" });
+    res.status(200).json(staff);
+  } catch (e) {
+    res.status(500).json({ message: err.message });
+  }
+};
+// Get a single user
+exports.getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .populate("supervisor", "name email role")
+      .populate("staff", "name email role")
+      .populate("users", "name email role")
+      .populate("createdBy", "name email role")
+      .populate("gstDetails")
+      .populate("incomeTaxDetails");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Update user
+exports.updateUser = async (req, res) => {
+  try {
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
-      updates,
-      { new: true, runValidators: true }
-    )
-      .select("-password")
-      .populate("tasks");
+      { ...req.body, updatedAt: new Date() },
+      { new: true }
+    );
 
-    if (!updatedUser) {
+    if (!updatedUser)
       return res.status(404).json({ message: "User not found" });
-    }
 
-    res.status(200).json(updatedUser);
+    // Add log
+    await addLog(
+      updatedUser._id,
+      "User Updated",
+      req.body.updatedBy,
+      "Details changed"
+    );
+
+    res.json(updatedUser);
   } catch (err) {
-    res.status(500).json({ message: "Server Error", error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
-const deleteUser = async (req, res) => {
+// Soft delete user (set inactive)
+exports.deactivateUser = async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id).select("-password");
-    if (!deletedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.status(200).json({ message: "User deleted successfully" });
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { status: "inactive", updatedAt: new Date() },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Add log
+    await addLog(user._id, "User Deactivated", req.body.performedBy);
+
+    res.json({ message: "User deactivated", user });
   } catch (err) {
-    res.status(500).json({ message: "Server Error", error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
-const deactivateUser = async (req, res) => {
+
+// Delete user permanently
+exports.deleteUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const user = await User.findByIdAndDelete(req.params.id);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Add log to creator if exists
+    if (user.createdBy) {
+      await addLog(
+        user.createdBy,
+        "User Deleted",
+        req.body.performedBy,
+        `Deleted ${user.name}`
+      );
     }
 
-    if (!user.isActive) {
-      return res.status(400).json({ message: "User is already inactive" });
-    }
-
-    user.isActive = false;
-    await user.save();
-
-    res.status(200).json({ message: "User soft-deleted successfully" });
+    res.json({ message: "User deleted permanently" });
   } catch (err) {
-    res.status(500).json({ message: "Server Error", error: err.message });
+    res.status(500).json({ message: err.message });
   }
-};
-
-
-module.exports = {
-  createUser,
-  getAllUsers,
-  getUserById,
-  updateUser,
-  deleteUser,
-  deactivateUser
 };

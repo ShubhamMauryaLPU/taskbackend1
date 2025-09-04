@@ -19,7 +19,6 @@ mongoose.connect(
 // Generate Users
 const generateUsers = () => {
   const users = [];
-
   // Admin
   const admin = new User({
     name: faker.person.fullName(),

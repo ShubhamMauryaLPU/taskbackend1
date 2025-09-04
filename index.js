@@ -8,6 +8,7 @@ const methodOverride = require("method-override");
 const taskRoute = require("./routes/tasks.route.js");
 const userRoute = require("./routes/user.route.js");
 const userAuth = require("./routes/auth.routes.js");
+const userSampleSchema = require("./models/user.sample.schema.js");
 
 const app = express();
 
@@ -33,7 +34,6 @@ app.use("/api/v1/user", userRoute);
 app.get("/", (req, res) => {
   res.send("Your Backend is working");
 });
-
 // Database connection
 const mongoUrl = process.env.MONGO_DB_URL;
 mongoose
