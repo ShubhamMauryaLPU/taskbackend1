@@ -2,23 +2,25 @@ const mongoose = require("mongoose");
 // Log Schema
 const logSchema = new mongoose.Schema(
   {
-    action: { type: String, required: true }, // e.g., "Task Created", "Submitted", "Approved"
+    action: { type: String, required: true }, // "Task Created", "Submitted", "Approved"
     performedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // who did the action
     timestamp: { type: Date, default: Date.now },
     remark: { type: String },
   },
   { _id: false }
 );
-
-// Income Tax / Compliance Task Schema
+// Main income tax schema
 const incomeTaxSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Owner of IT record
-    // title: { type: String, required: true },
-    // description: { type: String },
+    title: {
+      type: String,
+      enum: ["ITR","Audit", "Other"],
+      required: true,
+    },
     type: {
       type: String,
-      enum: ["ITR Filing", "TDS Filing", "Audit", "Other Compliance"],
+      enum: ["ITR Filing","Audit", "Other Compliance"],
       required: true,
     },
     financialYear: { type: String, required: true }, // "2024-25"
@@ -56,7 +58,7 @@ const incomeTaxSchema = new mongoose.Schema(
       default: "Pending",
     },
     // Assignment
-    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // staff or user
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // staff 
     supervisedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // supervisor
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // admin
     // Optional financial info

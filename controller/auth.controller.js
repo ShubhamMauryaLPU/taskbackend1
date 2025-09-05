@@ -1,4 +1,4 @@
-const User = require("../models/user.schema.js");
+const User = require("../models/user.sample.schema.js");
 const bcrypt = require("bcryptjs");
 
 const register = async (req, res) => {

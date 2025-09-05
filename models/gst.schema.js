@@ -37,7 +37,7 @@ const gstReturnSchema = new mongoose.Schema(
     },
     taxPaid: { type: Number, default: 0 },
     itcClaimed: { type: Number, default: 0 },
-    notes: { type: String }, // For special remarks (like SRM-2 notices)
+    remark: { type: String }, // For special remarks (like SRM-2 notices)
   },
   { _id: false }
 );
@@ -71,6 +71,7 @@ const gstSchema = new mongoose.Schema(
     tradeName: { type: String },
     state: { type: String, required: true },
     registrationDate: { type: Date },
+    title: { type: String, default: "GST", required: true },
     type: {
       type: String,
       enum: ["Regular", "Composition", "Casual", "SEZ", "Unregistered"],
@@ -79,10 +80,15 @@ const gstSchema = new mongoose.Schema(
     // Array of returns filed (GSTR-1, GSTR-3B, GSTR-2B, GSTR-9, PMT-06, SRM-2, IFF)
     returns: [gstReturnSchema],
     // Payments made
-    payments: [gstPaymentSchema], 
+    payments: [gstPaymentSchema],
     // Logs for auditing
     logs: [gstLogSchema],
-
+    status: {
+      type: String,
+      default: function () {
+        return this.returns?.[0]?.status || "pending";
+      },
+    }, 
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
