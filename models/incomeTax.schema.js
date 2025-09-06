@@ -54,7 +54,7 @@ const incomeTaxSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Pending", "In Progress", "Submitted", "Approved", "Rejected"],
+      enum: ["Pending", "Overdue", "Closed", "Filed"],
       default: "Pending",
     },
     // Assignment

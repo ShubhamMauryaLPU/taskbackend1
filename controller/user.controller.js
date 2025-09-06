@@ -8,7 +8,6 @@ const addLog = async (userId, action, performedBy, remark = "") => {
     },
   });
 };
-
 // Create a new user
 exports.createUser = async (req, res) => {
   try {
@@ -19,7 +18,7 @@ exports.createUser = async (req, res) => {
     if (role === "admin") {
       const adminExists = await User.findOne({ role: "admin" });
       if (adminExists) {
-        return res.status(400).json({ message: "Admin already exists" });
+        return res.status(400).json({ message: "Can't assign this role to anyone" });
       }
     }
 
@@ -97,6 +96,21 @@ exports.getUserById = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+exports.getUserByEmail=async (req,res)=>{
+  const {email}=req.body;
+  try {
+    const user = await User.findOne({email})
+      .populate("supervisor", "name email role")
+      .populate("staff", "name email role")
+      .populate("users", "name email role")
+      .populate("createdBy", "name email role")
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.status(201).json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
 
 // Update user
 exports.updateUser = async (req, res) => {

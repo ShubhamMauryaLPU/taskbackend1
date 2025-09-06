@@ -13,5 +13,6 @@ router.get("/", /* authMiddleware, */ userController.getAllUsers);
 // router.patch("/:id/deactivate", /* authMiddleware, adminOnly, */ userController.deactivateUser);
 // Delete user permanently
 // router.delete("/:id", /* authMiddleware, adminOnly, */ userController.deleteUser);
+router.post("/",userController.getUserByEmail);
 router.get("/staff",userController.getStaff);
 module.exports = router;

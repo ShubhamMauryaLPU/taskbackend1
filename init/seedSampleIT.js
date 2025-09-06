@@ -97,24 +97,38 @@ mongoose.connect(
 
 // seedIncomeTax();
 
-const changeTitle = async () => {
+// const changeTitle = async () => {
+//   try {
+//     const incomeTax = await IncomeTax.find({});
+//     for (const item of incomeTax) {
+//       if (item.type === "ITR Filing") {
+//         item.title = "ITR";
+//       } else if (item.type === "Audit") {
+//         item.title = "Audit";
+//       } else {
+//         item.title = "ITR";
+//         item.type = "ITR Filing";
+//       }
+//       await item.save();
+//     }
+//     console.log("Titles updated successfully");
+//   } catch (err) {
+//     console.error("Error updating titles:", err);
+//   }
+// };
+// changeTitle()
+
+const status = ["Pending", "Overdue", "Closed", "Filed"];
+
+const changeStatus = async () => {
   try {
     const incomeTax = await IncomeTax.find({});
-    for (const item of incomeTax) {
-      if (item.type === "ITR Filing") {
-        item.title = "ITR";
-      } else if (item.type === "Audit") {
-        item.title = "Audit";
-      } else {
-        item.title = "ITR";
-        item.type = "ITR Filing";
-      }
-      await item.save();
-    }
-    console.log("Titles updated successfully");
+    
+   console.log(incomeTax.length)
   } catch (err) {
-    console.error("Error updating titles:", err);
+    console.error("Error updating status:", err);
   }
 };
-changeTitle()
+
+changeStatus();
 
